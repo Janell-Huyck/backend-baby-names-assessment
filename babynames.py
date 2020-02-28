@@ -10,9 +10,14 @@
 # Google's Python Class
 # http://code.google.com/edu/languages/google-python-class/
 
+__author__ = "Janell.Huyck and madarp"
+
 import sys
 import re
 import argparse
+
+if sys.version_info[0] >= 3:
+    raise Exception("This program requires python2 interpreter")
 
 """
 Define the extract_names() function below and change main()
@@ -41,30 +46,56 @@ Suggested milestones for incremental development:
 
 def extract_names(filename):
     """
-    Given a single file name for babyXXXX.html, returns a single list starting
-    with the year string followed by the name-rank strings in alphabetical order.
-    ['2006', 'Aaliyah 91', Aaron 57', 'Abagail 895', ' ...]
-    """
+    Given a single file name for babyXXXX.html, returns a single
+    list starting with the year string followed by the name-rank
+    strings in alphabetical order. ['2006', 'Aaliyah 91', Aaron 57',
+     'Abagail 895', ' ...]"""
     names = []
-    # +++your code here+++
+    file_data = extract_file_data(filename)
+    name_year = str(
+        re.search(r'Popularity\sin\s(\d\d\d\d)', file_data).group(1))
+    name_dict = extract_name_dict(file_data)
+    names.append(name_year)
+    for name in sorted(name_dict):
+        name_pair = str(name + " " + name_dict[name])
+        names.append(name_pair)
     return names
+
+
+def extract_file_data(filename):
+    with open(filename, "r") as f:
+        file_data = f.read()
+    return file_data
+
+
+def extract_name_dict(file_data):
+    name_dict = {}
+    names = re.findall(
+        r'<td>(\d+)</td><td>(\w+)</td><td>(\w+)</td>', file_data)
+    for ranked_name in names:
+        if ranked_name[1] not in name_dict:
+            name_dict[ranked_name[1]] = ranked_name[0]
+        if ranked_name[2] not in name_dict:
+            name_dict[ranked_name[2]] = ranked_name[0]
+    return name_dict
 
 
 def create_parser():
     """Create a cmd line parser object with 2 argument definitions"""
-    parser = argparse.ArgumentParser(description="Extracts and alphabetizes baby names from html.")
+
+    parser = argparse.ArgumentParser(
+        description="Extracts and alphabetizes baby names from html.")
     parser.add_argument(
         '--summaryfile', help='creates a summary file', action='store_true')
     # The nargs option instructs the parser to expect 1 or more filenames.
-    # It will also expand wildcards just like the shell, e.g. 'baby*.html' will work.
+    # It will also expand wildcards just like the shell, e.g.
+    # 'baby*.html' will work.
     parser.add_argument('files', help='filename(s) to parse', nargs='+')
     return parser
 
 
 def main(args):
-    # Create a command-line parser object with parsing rules
     parser = create_parser()
-    # Run the parser to collect command-line arguments into a NAMESPACE called 'ns'
     ns = parser.parse_args(args)
 
     if not ns:
@@ -73,15 +104,17 @@ def main(args):
 
     file_list = ns.files
 
-    # option flag
-    create_summary = ns.summaryfile
+    create_summary = ns.summaryfile  # option flag
 
-    # For each filename, call `extract_names` with that single file.
-    # Format the resulting list a vertical list (separated by newline \n)
-    # Use the create_summary flag to decide whether to print the list,
-    # or to write the list to a summary file e.g. `baby1990.html.summary`
+    for file in file_list:
+        name_list = extract_names(file)
 
-    # +++your code here+++
+        if create_summary:
+            filename = "{}.summary".format(file)
+            with open(filename, "w") as summary_file:
+                summary_file.write(str(name_list))
+        else:
+            print('\n'.join(name_list))
 
 
 if __name__ == '__main__':
