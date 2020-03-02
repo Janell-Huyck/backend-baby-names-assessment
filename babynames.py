@@ -112,7 +112,7 @@ def main(args):
         if create_summary:
             filename = "{}.summary".format(file)
             with open(filename, "w") as summary_file:
-                summary_file.write(str(name_list))
+                summary_file.write('\n'.join(name_list))
         else:
             print('\n'.join(name_list))
 
